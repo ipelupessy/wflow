@@ -70,8 +70,8 @@ This should run without errors
 Running wflow_sbm from docker
 =============================
 
-To run the above from the docker container, get the docker image by either installing docker and running ```docker
-buid .``` in your local repository directory. Alternatively, download the image from docker hub by typing
+To run the above from the docker container, get the docker image by either installing docker and running ``docker
+buid .`` in your local repository directory. Alternatively, download the image from docker hub by typing
 
 + docker pull ewatercycle/wflow
 
