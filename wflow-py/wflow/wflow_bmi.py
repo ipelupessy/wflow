@@ -5,10 +5,10 @@ import logging
 import datetime
 import parser
 
-import wflow.bmi as bmi
+import bmi
 import wflow_lib
 import numpy as np
-from wflow.pcrut import setlogger
+from pcrut import setlogger
 from pcraster import *
 import ConfigParser
 
@@ -1133,7 +1133,7 @@ class wflowbmi_csdms(bmi.Bmi):
                 "get_value_at_indices: " + long_var_name + " at " + str(inds)
             )
             npmap = self.dynModel.wf_supplyMapAsNumpy(long_var_name)
-            return npmap[inds]
+            return npmap.flat[inds]
         else:
             self.bmilogger.error(
                 "get_value_at_indices: "
@@ -1172,10 +1172,10 @@ class wflowbmi_csdms(bmi.Bmi):
                 "set_value_at_indices: " + long_var_name + " at " + str(inds)
             )
             npmap = self.dynModel.wf_supplyMapAsNumpy(long_var_name)
-            npmap[inds] = src
+            npmap.flat[inds] = src
             self.dynModel.wf_setValuesAsNumpy(long_var_name, npmap)
 
-    def get_grid_type(self, long_var_name):
+    def get_grid_type(self, grid_id):
         """
         Get the grid type according to the enumeration in BmiGridType
 
@@ -1186,12 +1186,12 @@ class wflowbmi_csdms(bmi.Bmi):
         ret = BmiGridType()
 
         self.bmilogger.debug(
-            "get_grid_type: " + long_var_name + " result: " + str(ret.UNIFORM)
+            "get_grid_type: " + str(grid_id) + " result: " + str(ret.UNIFORM)
         )
 
         return ret.UNIFORM
 
-    def get_grid_shape(self, long_var_name):
+    def get_grid_shape(self, grid_id):
         """
         Return the shape of the grid. Only return something for variables with a uniform, rectilinear or structured grid. Otherwise raise ValueError.
 
@@ -1203,12 +1203,12 @@ class wflowbmi_csdms(bmi.Bmi):
         # [ Xll, Yll, xsize, ysize, rows, cols]
 
         self.bmilogger.debug(
-            "get_grid_shape: " + long_var_name + " result: " + str([dim[4], dim[5]])
+            "get_grid_shape: " + str(grid_id) + " result: " + str([dim[4], dim[5]])
         )
 
         return [dim[4], dim[5]]
 
-    def get_grid_spacing(self, long_var_name):
+    def get_grid_spacing(self, grid_id):
         """
         Only return something for variables with a uniform grid. Otherwise raise ValueError.
 
@@ -1220,11 +1220,11 @@ class wflowbmi_csdms(bmi.Bmi):
         x = dims[0]
         y = dims[1]
         self.bmilogger.debug(
-            "get_grid_spacing: " + long_var_name + " result: " + str([y, x])
+            "get_grid_spacing: " + str(grid_id) + " result: " + str([y, x])
         )
         return [y, x]
 
-    def get_grid_origin(self, long_var_name):
+    def get_grid_origin(self, grid_id):
         """
         gets the origin of the model grid.
 
@@ -1239,11 +1239,11 @@ class wflowbmi_csdms(bmi.Bmi):
         x = dims[0] - (xsize * 0.5)
         y = dims[7] - (ysize * 0.5)
         self.bmilogger.debug(
-            "get_grid_origin: " + long_var_name + " result: " + str([y, x])
+            "get_grid_origin: " + str(grid_id) + " result: " + str([y, x])
         )
         return [y, x]
 
-    def get_grid_x(self, long_var_name):
+    def get_grid_x(self, grid_id):
         """
         Give X coordinates of point in the model grid
 
@@ -1252,10 +1252,10 @@ class wflowbmi_csdms(bmi.Bmi):
         :return: Numpy array of doubles: x coordinate of grid cell center for each grid cell, in the same order as the
         values returned by function get_value.
         """
-        self.bmilogger.debug("get_grid_x: " + long_var_name)
-        return self.dynModel.wf_supplyMapXAsNumpy()
+        self.bmilogger.debug("get_grid_x: " + str(grid_id))
+        return self.dynModel.wf_supplyMapYAsNumpy()[:,0]
 
-    def get_grid_y(self, long_var_name):
+    def get_grid_y(self, grid_id):
         """
         Give Y coordinates of point in the model grid
 
@@ -1265,10 +1265,10 @@ class wflowbmi_csdms(bmi.Bmi):
         values returned by function get_value.
 
         """
-        self.bmilogger.debug("get_grid_y: " + long_var_name)
-        return self.dynModel.wf_supplyMapYAsNumpy()
+        self.bmilogger.debug("get_grid_y: " + str(grid_id))
+        return self.dynModel.wf_supplyMapXAsNumpy()[0,:]
 
-    def get_grid_z(self, long_var_name):
+    def get_grid_z(self, grid_id):
         """
         Give Z coordinates of point in the model grid
 
@@ -1276,8 +1276,9 @@ class wflowbmi_csdms(bmi.Bmi):
 
         :return: Numpy array of doubles: z coordinate of grid cell center for each grid cell, in the same order as the values returned by function get_value.
         """
-        self.bmilogger.debug("get_grid_z: " + long_var_name)
-        return self.dynModel.wf_supplyMapZAsNumpy()
+        raise NotImplementedError
+        #~ self.bmilogger.debug("get_grid_z: " + grid_id)
+        #~ return self.dynModel.wf_supplyMapZAsNumpy()
 
     def get_var_units(self, long_var_name):
         """
@@ -1352,10 +1353,30 @@ class wflowbmi_csdms(bmi.Bmi):
         """
         raise NotImplementedError
 
+    def get_var_grid(self, long_var_name):
+        """
+        gets the grid id of variable.
+
+        :var String long_var_name: identifier of a variable in the model.
+
+        :return: id
+        """
+        return 0
+        
+    def get_grid_rank(self, grid_id):
+        """
+        gets the grid rank.
+
+        :var int grid_id: identifier of grid.
+
+        :return: id
+        """
+        return 2
+
 
 class BmiGridType(object):
-    UNKNOWN = 0
-    UNIFORM = 1
-    RECTILINEAR = 2
-    STRUCTURED = 3
-    UNSTRUCTURED = 4
+    UNKNOWN = "unknown"
+    UNIFORM = "uniform_rectilinear"
+    RECTILINEAR = "rectilinear"
+    STRUCTURED = "structured"
+    UNSTRUCTURED = "unstructured"
